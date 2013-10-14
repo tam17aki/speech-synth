@@ -243,8 +243,9 @@ Of cource, you must prepare HTS voice files for each emotion."
 
 (defvar speech-synth-language-list '("English" "Japanese"))
 
-(defvar speech-synth-parameter-list '("warp" "rate" "pitch" "volume" "intonation"
-                                      "postfilter"))
+(defvar speech-synth-parameter-list
+  '("Spectral warping" "Speech rate" "Pitch-shift" "Voice volume"
+    "Intonation" "Postfilter"))
 
 (defvar speech-synth-emotion-list '("normal" "happy" "sad" "angry" "bashful"))
 
@@ -342,37 +343,37 @@ Of cource, you must prepare HTS voice files for each emotion."
   (if arg
       (speech-synth-set-parameter-reset)
     (let ((param (completing-read "Parameter: " speech-synth-parameter-list nil t)))
-      (cond ((equal param "warp")
+      (cond ((equal param "Spectral warping")
              (let ((warp (read-number "Spectral warping: "
                                       speech-synth-spectral-warping-default)))
                (when (or (> warp 1.0) (< warp 0.0))
                  (error "Warping parameter must be between 0.0 and 1.0!"))
                (setq speech-synth-spectral-warping warp)))
-            ((equal param "pitch")
-             (let ((pitch (read-number "Pitch-shift: "
-                                       speech-synth-pitch-shift-default)))
-               (when (or (> pitch 1.0) (< pitch 0.0))
-                 (error "Pitch shift parameter must be between 0.0 and 1.0!"))
-               (setq speech-synth-pitch-shift pitch)))
-            ((equal param "rate")
+            ((equal param "Speech rate")
              (let ((rate (read-number "Speech rate: "
                                       speech-synth-speaking-rate-default)))
                (when (< rate 0.0)
                  (error "Speaking rate parameter must be grater than 0.0!"))
                (setq speech-synth-speaking-rate rate)))
-            ((equal param "volume")
+            ((equal param "Pitch-shift")
+             (let ((pitch (read-number "Pitch-shift: "
+                                       speech-synth-pitch-shift-default)))
+               (when (or (> pitch 1.0) (< pitch 0.0))
+                 (error "Pitch shift parameter must be between 0.0 and 1.0!"))
+               (setq speech-synth-pitch-shift pitch)))
+            ((equal param "Voice volume")
              (let ((volume (read-number "Voice volume: "
                                         speech-synth-voice-volume-default)))
                (when (< volume 0.0)
                  (error "Voice volume parameter must be greater than 0.0!"))
                (setq speech-synth-voice-volume volume)))
-            ((equal param "intonation")
+            ((equal param "Intonation")
              (let ((intonation (read-number "Intonation: "
                                             speech-synth-intonation-default)))
                (when (< intonation 0.0)
                  (error "Intonation parameter must be greater than 0.0!"))
                (setq speech-synth-intonation intonation)))
-            ((equal param "postfilter")
+            ((equal param "Postfilter")
              (let ((postfilter (read-number "Postfilter: "
                                             speech-synth-postfilter-default)))
                (when (or (> postfilter 1.0) (< postfilter 0.0))
@@ -382,27 +383,27 @@ Of cource, you must prepare HTS voice files for each emotion."
 (defun speech-synth-set-parameter (param param_val &optional reset_all)
   (if reset_all
       (speech-synth-set-parameter-reset))
-  (cond ((equal param "warp")
+  (cond ((equal param "Spectral warping")
          (when (or (> param_val 1.0) (< param_val 0.0))
            (error "Warping parameter must be between 0.0 and 1.0!"))
          (setq speech-synth-spectral-warping param_val))
-        ((equal param "pitch")
+        ((equal param "Speech rate")
          (when (or (> param_val 1.0) (< param_val 0.0))
              (error "Pitch shift parameter must be between 0.0 and 1.0!"))
          (setq speech-synth-pitch-shift param_val))
-        ((equal param "rate")
+        ((equal param "Pitch-shift")
          (when (< param_val 0.0)
            (error "Speaking rate parameter must be grater than 0.0!"))
          (setq speech-synth-speaking-rate param_val))
-        ((equal param "volume")
+        ((equal param "Voice volume")
          (when (< param_val 0.0)
            (error "Voice volume parameter must be greater than 0.0!"))
          (setq speech-synth-voice-volume param_val))
-        ((equal param "intonation")
+        ((equal param "Intonation")
          (when (< param_val 0.0)
            (error "Intonation parameter must be greater than 0.0!"))
          (setq speech-synth-intonation param_val))
-        ((equal param "postfilter")
+        ((equal param "Postfilter")
          (when (or (> param_val 1.0) (< param_val 0.0))
            (error "Postfilter parameter must be between 0.0 and 1.0!"))
          (setq speech-synth-postfilter param_val))
