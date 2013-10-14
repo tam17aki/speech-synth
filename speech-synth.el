@@ -204,8 +204,8 @@ Of cource, you must prepare HTS voice files for each emotion."
 (defvar speech-synth-emotion-default "normal"
   "Default of emotion in speech synthesis.")
 
-(defvar speech-synth-language-default "English"
-  "Default of language in speech speech.")
+(defvar speech-synth-language "English"
+  "Default language in speech speech.")
 
 (defvar speech-synth-spectral-warping speech-synth-spectral-warping-default
   "Value of spectral warping parameter.")
@@ -227,9 +227,6 @@ Of cource, you must prepare HTS voice files for each emotion."
 
 (defvar speech-synth-postfilter speech-synth-postfilter-default
   "Value of postfilter coefficient in speech synthesis.")
-
-(defvar speech-synth-language speech-synth-language-default
-  "Language in speech speech.")
 
 (defvar speech-synth-mode-key-table
   '(("C-c C-j"   . speech-synth-japanese-from-buffer)
@@ -417,7 +414,7 @@ Of cource, you must prepare HTS voice files for each emotion."
 ;;;###autoload
 (defun speech-synth-set-emotion (arg)
   (interactive "P")
-  (if speech-synth-emotional-speech
+  (if (and speech-synth-emotional-speech (equal speech-synth-language "Japanese"))
     (if arg
         (speech-synth-set-emotion-reset)
       (let ((emotion (completing-read "Emotion: " speech-synth-emotion-list nil t)))
