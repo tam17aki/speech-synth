@@ -3,8 +3,8 @@
 ;; Copyright (C) 2013 by Akira Tamamori
 
 ;; Author: Akira TAMAMORI
-;; Version: 1.0.0
-;; Package-Requires: ((deferred "20130312.1514"))
+;; Version: 1.1.0
+;; Package-Requires: ((deferred "0.3.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -68,7 +68,8 @@
 ;;
 ;; `speech-synth-from-region'
 ;;     Synthesize speech from strings in region.
-;;     Language (English or Japanese) is automatically selected.
+;;     When `speech-synth-auto-select-language' is t,
+;;     language (English or Japanese) in speech synthesis is automatically selected.
 ;;
 ;; `speech-synth-english-from-buffer'
 ;;     Synthesize English speech from strings in buffer.
@@ -78,11 +79,28 @@
 ;;
 ;; `speech-synth-from-buffer'
 ;;     Synthesize speech from strings in buffer.
-;;     Language (English or Japanese) is automatically selected.
-
-;;; Samples:
+;;     When `speech-synth-auto-select-language' is t,
+;;     language (English or Japanese) in speech synthesis is automatically selected.
+;;
+;; `speech-synth-set-language'
+;;     Specify language in speech synthesis.
+;;     Only when `speech-synth-auto-select-language' is nil,
+;;     speech is synthesised in the specified language.
+;;
+;; `speech-synth-set-emotion'
+;;     Specify emotion in speech synthesis (Japanese only).
+;;     When invoking this command with C-u, emotion is reset to default.
+;;     Of cource you must prepare HTS voice files for each emotion.
+;;
+;; `speech-synth-set-parameter'
+;;     Set parameters in speech synthesis.
+;;     When invoking this command with C-u, all parameters are reset to their
+;;     default values.
 
 ;;; ChangeLog:
+;;
+;; 1.1.0
+;;   * add functions to synthesise emotional speech (Japanese only).
 ;;
 ;; 1.0.0
 ;;   * Initial release.
@@ -105,14 +123,21 @@
   :type 'directory
   :group 'speech-synth)
 
+(defcustom speech-synth-voice-directory "/usr/local/share/hts_voice/"
+  "HTS voice directory."
+  :type 'directory
+  :group 'speech-synth)
+
 (defcustom speech-synth-Flite-voice-file
-  "/usr/local/share/cmu_us_arctic_slt.htsvoice"
+  (concat speech-synth-voice-directory
+          "cmu_us_arctic_slt.htsvoice")
   "HTS voice file for Flite+hts_engine."
   :type '(file :must-match t)
   :group 'speech-synth)
 
 (defcustom speech-synth-OpenJTalk-voice-file
-  "/usr/local/share/nitech_jp_atr503_m001.htsvoice"
+  (concat speech-synth-voice-directory
+          "nitech_jp_atr503_m001.htsvoice")
   "HTS voice file for Open JTalk."
   :type '(file :must-match t)
   :group 'speech-synth)
@@ -137,6 +162,17 @@
   :type 'float
   :group 'speech-synth)
 
+(defcustom speech-synth-auto-select-language t
+  "In non-nil, language in speech synthesis is selected automatically."
+  :type 'boolean
+  :group 'speech-synth)
+
+(defcustom speech-synth-emotional-speech nil
+  "If non-nil, emotional speech synthesis can be used (Japanese only).
+Of cource, you must prepare HTS voice files for each emotion."
+  :type 'boolean
+  :group 'speech-synth)
+
 ;;;; Internal variables
 
 (defvar speech-synth-mode-name "Synth"
@@ -145,14 +181,47 @@
 (defvar speech-synth-buffer "*Speech Synth*"
   "Buffer name for speech-synth-mode.")
 
-(defvar speech-synth-spectral-warping 0.55
+(defvar speech-synth-spectral-warping-default 0.55
   "Default value of spectral warping parameter.")
 
-(defvar speech-synth-speaking-rate 1.0
+(defvar speech-synth-speaking-rate-default 1.0
   "Defalut value of speaking rate.")
 
-(defvar speech-synth-pitch-shift 0.0
+(defvar speech-synth-pitch-shift-default 0.0
   "Default value of pitch shift.")
+
+(defvar speech-synth-voice-volume-default 1.0
+  "Default value of volume of voice.")
+
+(defvar speech-synth-intonation-default 1.0
+  "Default value of intonation.")
+
+(defvar speech-synth-emotion-default "normal"
+  "Default of emotion in speech synthesis.")
+
+(defvar speech-synth-language-default "English"
+  "Default of language in speech speech.")
+
+(defvar speech-synth-spectral-warping speech-synth-spectral-warping-default
+  "Value of spectral warping parameter.")
+
+(defvar speech-synth-speaking-rate speech-synth-speaking-rate-default
+  "Value of speaking rate.")
+
+(defvar speech-synth-pitch-shift speech-synth-pitch-shift-default
+  "Value of pitch shift.")
+
+(defvar speech-synth-voice-volume speech-synth-voice-volume-default
+  "Value of volume of voice.")
+
+(defvar speech-synth-intonation speech-synth-intonation-default
+  "Value of intonation.")
+
+(defvar speech-synth-emotion speech-synth-emotion-default
+  "Value of emotion in speech.")
+
+(defvar speech-synth-language speech-synth-language-default
+  "Language in speech speech.")
 
 (defvar speech-synth-mode-key-table
   '(("C-c C-j"   . speech-synth-japanese-from-buffer)
@@ -165,6 +234,10 @@
   "Default key table for speech-synth-mode.")
 
 (defvar speech-synth-language-list '("English" "Japanese"))
+
+(defvar speech-synth-parameter-list '("warp" "rate" "pitch" "volume" "intonation"))
+
+(defvar speech-synth-emotion-list '("normal" "happy" "sad" "angry" "bashful"))
 
 ;;;; Major mode
 
@@ -192,32 +265,118 @@
   (concat (make-temp-name
            (expand-file-name temporary-file-directory)) ".wav"))
 
-(defun speech-synth-get-command-line (lang wav warp pitch rate)
+(defun speech-synth-get-command-line (lang wav warp pitch rate volume intonation)
   (cond ((equal lang "English")
          (unless speech-synth-Flite-command
            (error "You must install Flite+hts_engine!"))
-         (format "%s -o %s -m %s -a %f -r %f -fm %f"
+         (speech-synth-check-parameter warp pitch rate volume intonation)
+         (format "%s -o %s -m %s -a %f -r %f -fm %f -jm %f -jf %f"
                  speech-synth-Flite-command
                  wav speech-synth-Flite-voice-file
-                 warp rate pitch))
+                 warp rate pitch volume intonation))
         ((equal lang "Japanese")
          (unless speech-synth-OpenJTalk-command
            (error "You must install Open JTalk!"))
-         (format "%s -x %s -ow %s -m %s -a %f -r %f -fm %f"
+         (speech-synth-check-parameter warp pitch rate volume intonation)
+         (format "%s -x %s -ow %s -m %s -a %f -r %f -fm %f -jm %f -jf %f"
                  speech-synth-OpenJTalk-command
                  speech-synth-dictionary-directory
                  wav speech-synth-OpenJTalk-voice-file
-                 warp rate pitch))
+                 warp rate pitch volume intonation))
         (t
          (error "You must specify either English or Japanese!"))))
 
-(defun speech-synth-get-parameter ()
-  (list (read-number "Spectral transformation: "
-                     speech-synth-spectral-warping)
-        (read-number "Pitch-shift: "
-                     speech-synth-pitch-shift)
-        (read-number "Speech rate: "
-                     speech-synth-speaking-rate)))
+(defun speech-synth-get-parameter (use_default)
+  (cond ((eq use_default t)
+         (list (read-number "Spectral warping: "
+                            speech-synth-spectral-warping-default)
+               (read-number "Pitch-shift: "
+                            speech-synth-pitch-shift-default)
+               (read-number "Speech rate: "
+                            speech-synth-speaking-rate-default)
+               (read-number "Voice volume: "
+                            speech-synth-voice-volume-default)
+               (read-number "Intonation: "
+                            speech-synth-intonation-default)))
+        (t
+         (list speech-synth-spectral-warping
+               speech-synth-pitch-shift
+               speech-synth-speaking-rate
+               speech-synth-voice-volume
+               speech-synth-intonation))))
+
+(defun speech-synth-set-parameter-reset ()
+  (setq speech-synth-spectral-warping speech-synth-spectral-warping-default
+        speech-synth-speaking-rate speech-synth-speaking-rate-default
+        speech-synth-pitch-shift speech-synth-pitch-shift-default
+        speech-synth-voice-volume speech-synth-voice-volume-default
+        speech-synth-intonation speech-synth-intonation-default)
+  (message "Speech synthesis parameters are reset."))
+
+;;;###autoload
+(defun speech-synth-set-parameter (arg)
+  (interactive "P")
+  (if arg
+      (speech-synth-set-parameter-reset)
+    (let ((param (completing-read "Parameter: " speech-synth-parameter-list nil t)))
+      (cond ((equal param "warp")
+             (let ((warp (read-number "Spectral warping: "
+                                      speech-synth-spectral-warping-default)))
+               (when (or (> warp 1.0) (< warp 0.0))
+                 (error "Warping parameter must be between 0.0 and 1.0!"))
+               (setq speech-synth-spectral-warping warp)))
+            ((equal param "pitch")
+             (let ((pitch (read-number "Pitch-shift: "
+                                       speech-synth-pitch-shift-default)))
+               (when (or (> pitch 1.0) (< pitch 0.0))
+                 (error "Pitch shift parameter must be between 0.0 and 1.0!"))
+               (setq speech-synth-pitch-shift pitch)))
+            ((equal param "rate")
+             (let ((rate (read-number "Speech rate: "
+                                      speech-synth-speaking-rate-default)))
+               (when (< rate 0.0)
+                 (error "Speaking rate parameter must be grater than 0.0!"))
+               (setq speech-synth-speaking-rate rate)))
+            ((equal param "volume")
+             (let ((volume (read-number "Voice volume: "
+                                        speech-synth-voice-volume-default)))
+               (when (< volume 0.0)
+                 (error "Voice volume parameter must be greater than 0.0!"))
+               (setq speech-synth-voice-volume volume)))
+            ((equal param "intonation")
+             (let ((intonation (read-number "Intonation: "
+                                            speech-synth-intonation-default)))
+               (when (< intonation 0.0)
+                 (error "Intonation parameter must be greater than 0.0!"))
+               (setq speech-synth-intonation intonation)))))))
+
+(defun speech-synth-check-parameter (warp pitch rate volume intonation)
+  (when (or (> warp 1.0) (< warp 0.0))
+    (error "Warping parameter must be between 0.0 and 1.0!"))
+  (when (or (> pitch 1.0) (< pitch 0.0))
+    (error "Pitch shift parameter must be between 0.0 and 1.0!"))
+  (when (< rate 0.0)
+    (error "Speaking rate parameter must be grater than 0.0!"))
+  (when (< volume 0.0)
+    (error "Voice volume parameter must be greater than 0.0!"))
+  (when (< intonation 0.0)
+    (error "Intonation parameter must be greater than 0.0!")))
+
+(defun speech-synth-set-emotion-reset ()
+  (setq speech-synth-emotion speech-synth-emotion-default)
+  (message "Emotion in speech synthesis are reset."))
+
+;;;###autoload
+(defun speech-synth-set-emotion (arg)
+  (interactive "P")
+  (if speech-synth-emotional-speech
+    (if arg
+        (speech-synth-set-emotion-reset)
+      (let ((emotion (completing-read "Emotion: " speech-synth-emotion-list nil t)))
+        (setq speech-synth-OpenJTalk-voice-file
+              (concat speech-synth-voice-directory "mei_" emotion ".htsvoice"))
+        (message "Emotion in speech synthesis is set to %s" emotion)))
+    (message "Emotion in speech synthesis cannot be specified.")))
 
 (defun speech-synth-get-language (text)
   (if current-prefix-arg
@@ -231,6 +390,15 @@
      (t
       "Japanese"))))
 
+;;;###autoload
+(defun speech-synth-set-language (arg)
+  (interactive "P")
+  (if arg
+      (setq speech-synth-language "Japanese"))
+  (let ((lang (completing-read "Language: " speech-synth-language-list nil t)))
+    (setq speech-synth-language lang)
+    (message "Language in speech synthesis is set to %s" lang)))
+
 ;;;; API
 
 (defun* speech-synth-execute-synthesis (lang
@@ -239,6 +407,8 @@
                                         (warp speech-synth-spectral-warping)
                                         (pitch speech-synth-pitch-shift)
                                         (rate speech-synth-speaking-rate)
+                                        (volume speech-synth-voice-volume)
+                                        (intonation speech-synth-intonation)
                                         wav-file)
   "Text-to-Speech API for Emacs."
   (lexical-let* ((speech-synth-temp-wav-file
@@ -246,13 +416,13 @@
                  (speech-synth-wav-file wav-file)
                  (speech-synth-command
                   (speech-synth-get-command-line
-                   lang speech-synth-temp-wav-file warp pitch rate)))
+                   lang speech-synth-temp-wav-file warp pitch rate volume intonation)))
     (deferred:$
       ;; speech synthesis
       (deferred:process "sh" "-c"
         (concat "echo " text " | " speech-synth-command))
 
-      ;; play synthesized waveform.
+      ;; play synthesized waveform
       (deferred:nextc it
         (lambda ()
           (cond (speech-synth-play-wav
@@ -270,54 +440,64 @@
 ;;;; External Functions
 
 ;;;###autoload
-(defun speech-synth-english-from-buffer (warp pitch rate)
+(defun speech-synth-english-from-buffer (warp pitch rate volume intonation)
   "Synthesize English speech from strings in buffer."
-  (interactive (speech-synth-get-parameter))
+  (interactive (speech-synth-get-parameter t))
   (let ((str (speech-synth-get-string (point-min) (point-max))))
     (speech-synth-execute-synthesis
-     "English" str :warp warp :pitch pitch :rate rate)))
+     "English" str :warp warp :pitch pitch :rate rate :volume volume
+     :intonation intonation)))
 
 ;;;###autoload
-(defun speech-synth-japanese-from-buffer (warp pitch rate)
+(defun speech-synth-japanese-from-buffer (warp pitch rate volume intonation)
   "Synthesize Japanese speech from strings in buffer."
-  (interactive (speech-synth-get-parameter))
+  (interactive (speech-synth-get-parameter nil))
   (let ((str (speech-synth-get-string (point-min) (point-max))))
     (speech-synth-execute-synthesis
-     "Japanese" str :warp warp :pitch pitch :rate rate)))
+     "Japanese" str :warp warp :pitch pitch :rate rate :volume volume
+     :intonation intonation)))
 
 ;;;###autoload
-(defun speech-synth-from-buffer (warp pitch rate)
+(defun speech-synth-from-buffer (warp pitch rate volume intonation)
   "Synthesize speech from strings in buffer."
-  (interactive (speech-synth-get-parameter))
+  (interactive (speech-synth-get-parameter nil))
   (let* ((str (speech-synth-get-string (point-min) (point-max)))
-         (lang (speech-synth-get-language str)))
+         (lang (if speech-synth-auto-select-language
+                   (speech-synth-get-language str)
+                 speech-synth-language)))
     (speech-synth-execute-synthesis
-     lang str :warp warp :pitch pitch :rate rate)))
+     lang str :warp warp :pitch pitch :rate rate :volume volume
+     :intonation intonation)))
 
 ;;;###autoload
-(defun speech-synth-english-from-region (warp pitch rate)
-  (interactive (speech-synth-get-parameter))
+(defun speech-synth-english-from-region (warp pitch rate volume intonation)
+  (interactive (speech-synth-get-parameter nil))
   "Synthesize English speech from strings in region."
   (let ((str (speech-synth-get-string (region-beginning) (region-end))))
     (speech-synth-execute-synthesis
-     "English" str :warp warp :pitch pitch :rate rate)))
+     "English" str :warp warp :pitch pitch :rate rate :volume volume
+     :intonation intonation)))
 
 ;;;###autoload
-(defun speech-synth-japanese-from-region (warp pitch rate)
-  (interactive (speech-synth-get-parameter))
+(defun speech-synth-japanese-from-region (warp pitch rate volume intonation)
+  (interactive (speech-synth-get-parameter nil))
   "Synthesize Japanese speech from strings in region."
   (let ((str (speech-synth-get-string (region-beginning) (region-end))))
     (speech-synth-execute-synthesis
-     "Japanese" str :warp warp :pitch pitch :rate rate)))
+     "Japanese" str :warp warp :pitch pitch :rate rate :volume volume
+     :intonation intonation)))
 
 ;;;###autoload
-(defun speech-synth-from-region (warp pitch rate)
+(defun speech-synth-from-region (warp pitch rate volume intonation)
   "Synthesize speech from strings in region."
-  (interactive (speech-synth-get-parameter))
+  (interactive (speech-synth-get-parameter nil))
   (let* ((str (speech-synth-get-string (region-beginning) (region-end)))
-         (lang (speech-synth-get-language str)))
+         (lang (if speech-synth-auto-select-language
+                   (speech-synth-get-language str)
+                 speech-synth-language)))
     (speech-synth-execute-synthesis
-     lang str :warp warp :pitch pitch :rate rate)))
+     lang str :warp warp :pitch pitch :rate rate :volume volume
+     :intonation intonation)))
 
 ;;;###autoload
 (defun speech-synth ()
