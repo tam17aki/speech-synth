@@ -101,6 +101,7 @@
 ;;
 ;; 1.1.0
 ;;   * add functions to synthesise emotional speech (Japanese only).
+;;   * add variables to specify voice volume, intonation, and post-filtering.
 ;;
 ;; 1.0.0
 ;;   * Initial release.
@@ -196,6 +197,9 @@ Of cource, you must prepare HTS voice files for each emotion."
 (defvar speech-synth-intonation-default 1.0
   "Default value of intonation.")
 
+(defvar speech-synth-postfilter-default 0.0
+  "Default value of post-filtering coefficient.")
+
 (defvar speech-synth-emotion-default "normal"
   "Default of emotion in speech synthesis.")
 
@@ -220,6 +224,9 @@ Of cource, you must prepare HTS voice files for each emotion."
 (defvar speech-synth-emotion speech-synth-emotion-default
   "Value of emotion in speech.")
 
+(defvar speech-synth-postfilter speech-synth-postfilter-default
+  "Value of postfilter coefficient in speech synthesis.")
+
 (defvar speech-synth-language speech-synth-language-default
   "Language in speech speech.")
 
@@ -235,7 +242,8 @@ Of cource, you must prepare HTS voice files for each emotion."
 
 (defvar speech-synth-language-list '("English" "Japanese"))
 
-(defvar speech-synth-parameter-list '("warp" "rate" "pitch" "volume" "intonation"))
+(defvar speech-synth-parameter-list '("warp" "rate" "pitch" "volume" "intonation"
+                                      "postfilter"))
 
 (defvar speech-synth-emotion-list '("normal" "happy" "sad" "angry" "bashful"))
 
@@ -265,24 +273,24 @@ Of cource, you must prepare HTS voice files for each emotion."
   (concat (make-temp-name
            (expand-file-name temporary-file-directory)) ".wav"))
 
-(defun speech-synth-get-command-line (lang wav warp pitch rate volume intonation)
+(defun speech-synth-get-command-line (lang wav warp pitch rate volume intonation postfilter)
   (cond ((equal lang "English")
          (unless speech-synth-Flite-command
            (error "You must install Flite+hts_engine!"))
-         (speech-synth-check-parameter warp pitch rate volume intonation)
-         (format "%s -o %s -m %s -a %f -r %f -fm %f -jm %f -jf %f"
+         (speech-synth-check-parameter warp pitch rate volume intonation postfilter)
+         (format "%s -o %s -m %s -a %f -r %f -fm %f -jm %f -jf %f -b %f"
                  speech-synth-Flite-command
                  wav speech-synth-Flite-voice-file
-                 warp rate pitch volume intonation))
+                 warp rate pitch volume intonation postfilter))
         ((equal lang "Japanese")
          (unless speech-synth-OpenJTalk-command
            (error "You must install Open JTalk!"))
-         (speech-synth-check-parameter warp pitch rate volume intonation)
-         (format "%s -x %s -ow %s -m %s -a %f -r %f -fm %f -jm %f -jf %f"
+         (speech-synth-check-parameter warp pitch rate volume intonation postfilter)
+         (format "%s -x %s -ow %s -m %s -a %f -r %f -fm %f -jm %f -jf %f -b %f"
                  speech-synth-OpenJTalk-command
                  speech-synth-dictionary-directory
                  wav speech-synth-OpenJTalk-voice-file
-                 warp rate pitch volume intonation))
+                 warp rate pitch volume intonation postfilter))
         (t
          (error "You must specify either English or Japanese!"))))
 
@@ -297,20 +305,24 @@ Of cource, you must prepare HTS voice files for each emotion."
                (read-number "Voice volume: "
                             speech-synth-voice-volume-default)
                (read-number "Intonation: "
-                            speech-synth-intonation-default)))
+                            speech-synth-intonation-default)
+               (read-number "Postfilter: "
+                            speech-synth-postfilter-default)))
         (t
          (list speech-synth-spectral-warping
                speech-synth-pitch-shift
                speech-synth-speaking-rate
                speech-synth-voice-volume
-               speech-synth-intonation))))
+               speech-synth-intonation
+               speech-synth-postfilter))))
 
 (defun speech-synth-set-parameter-reset ()
   (setq speech-synth-spectral-warping speech-synth-spectral-warping-default
         speech-synth-speaking-rate speech-synth-speaking-rate-default
         speech-synth-pitch-shift speech-synth-pitch-shift-default
         speech-synth-voice-volume speech-synth-voice-volume-default
-        speech-synth-intonation speech-synth-intonation-default)
+        speech-synth-intonation speech-synth-intonation-default
+        speech-synth-postfilter speech-synth-postfilter-default)
   (message "Speech synthesis parameters are reset."))
 
 ;;;###autoload
@@ -348,9 +360,15 @@ Of cource, you must prepare HTS voice files for each emotion."
                                             speech-synth-intonation-default)))
                (when (< intonation 0.0)
                  (error "Intonation parameter must be greater than 0.0!"))
-               (setq speech-synth-intonation intonation)))))))
+               (setq speech-synth-intonation intonation)))
+            ((equal param "postfilter")
+             (let ((postfilter (read-number "Postfilter: "
+                                            speech-synth-postfilter-default)))
+               (when (or (> postfilter 1.0) (< postfilter 0.0))
+                 (error "Postfilter parameter must be between 0.0 and 1.0!"))
+               (setq speech-synth-postfilter postfilter)))))))
 
-(defun speech-synth-check-parameter (warp pitch rate volume intonation)
+(defun speech-synth-check-parameter (warp pitch rate volume intonation postfilter)
   (when (or (> warp 1.0) (< warp 0.0))
     (error "Warping parameter must be between 0.0 and 1.0!"))
   (when (or (> pitch 1.0) (< pitch 0.0))
@@ -360,7 +378,9 @@ Of cource, you must prepare HTS voice files for each emotion."
   (when (< volume 0.0)
     (error "Voice volume parameter must be greater than 0.0!"))
   (when (< intonation 0.0)
-    (error "Intonation parameter must be greater than 0.0!")))
+    (error "Intonation parameter must be greater than 0.0!"))
+  (when (or (> postfilter 1.0) (< postfilter 0.0))
+    (error "Postfilter parameter must be between 0.0 and 1.0!")))
 
 (defun speech-synth-set-emotion-reset ()
   (setq speech-synth-emotion speech-synth-emotion-default)
@@ -409,6 +429,7 @@ Of cource, you must prepare HTS voice files for each emotion."
                                         (rate speech-synth-speaking-rate)
                                         (volume speech-synth-voice-volume)
                                         (intonation speech-synth-intonation)
+                                        (postfilter speech-synth-postfilter)
                                         wav-file)
   "Text-to-Speech API for Emacs."
   (lexical-let* ((speech-synth-temp-wav-file
@@ -416,7 +437,8 @@ Of cource, you must prepare HTS voice files for each emotion."
                  (speech-synth-wav-file wav-file)
                  (speech-synth-command
                   (speech-synth-get-command-line
-                   lang speech-synth-temp-wav-file warp pitch rate volume intonation)))
+                   lang speech-synth-temp-wav-file warp pitch rate
+                   volume intonation postfilter)))
     (deferred:$
       ;; speech synthesis
       (deferred:process "sh" "-c"
@@ -440,25 +462,25 @@ Of cource, you must prepare HTS voice files for each emotion."
 ;;;; External Functions
 
 ;;;###autoload
-(defun speech-synth-english-from-buffer (warp pitch rate volume intonation)
+(defun speech-synth-english-from-buffer (warp pitch rate volume intonation postfilter)
   "Synthesize English speech from strings in buffer."
   (interactive (speech-synth-get-parameter t))
   (let ((str (speech-synth-get-string (point-min) (point-max))))
     (speech-synth-execute-synthesis
      "English" str :warp warp :pitch pitch :rate rate :volume volume
-     :intonation intonation)))
+     :intonation intonation :postfilter postfilter)))
 
 ;;;###autoload
-(defun speech-synth-japanese-from-buffer (warp pitch rate volume intonation)
+(defun speech-synth-japanese-from-buffer (warp pitch rate volume intonation postfilter)
   "Synthesize Japanese speech from strings in buffer."
   (interactive (speech-synth-get-parameter nil))
   (let ((str (speech-synth-get-string (point-min) (point-max))))
     (speech-synth-execute-synthesis
      "Japanese" str :warp warp :pitch pitch :rate rate :volume volume
-     :intonation intonation)))
+     :intonation intonation :postfilter postfilter)))
 
 ;;;###autoload
-(defun speech-synth-from-buffer (warp pitch rate volume intonation)
+(defun speech-synth-from-buffer (warp pitch rate volume intonation postfilter)
   "Synthesize speech from strings in buffer."
   (interactive (speech-synth-get-parameter nil))
   (let* ((str (speech-synth-get-string (point-min) (point-max)))
@@ -467,28 +489,28 @@ Of cource, you must prepare HTS voice files for each emotion."
                  speech-synth-language)))
     (speech-synth-execute-synthesis
      lang str :warp warp :pitch pitch :rate rate :volume volume
-     :intonation intonation)))
+     :intonation intonation :postfilter postfilter)))
 
 ;;;###autoload
-(defun speech-synth-english-from-region (warp pitch rate volume intonation)
+(defun speech-synth-english-from-region (warp pitch rate volume intonation postfilter)
   (interactive (speech-synth-get-parameter nil))
   "Synthesize English speech from strings in region."
   (let ((str (speech-synth-get-string (region-beginning) (region-end))))
     (speech-synth-execute-synthesis
      "English" str :warp warp :pitch pitch :rate rate :volume volume
-     :intonation intonation)))
+     :intonation intonation :postfilter postfilter)))
 
 ;;;###autoload
-(defun speech-synth-japanese-from-region (warp pitch rate volume intonation)
+(defun speech-synth-japanese-from-region (warp pitch rate volume intonation postfilter)
   (interactive (speech-synth-get-parameter nil))
   "Synthesize Japanese speech from strings in region."
   (let ((str (speech-synth-get-string (region-beginning) (region-end))))
     (speech-synth-execute-synthesis
      "Japanese" str :warp warp :pitch pitch :rate rate :volume volume
-     :intonation intonation)))
+     :intonation intonation :postfilter postfilter)))
 
 ;;;###autoload
-(defun speech-synth-from-region (warp pitch rate volume intonation)
+(defun speech-synth-from-region (warp pitch rate volume intonation postfilter)
   "Synthesize speech from strings in region."
   (interactive (speech-synth-get-parameter nil))
   (let* ((str (speech-synth-get-string (region-beginning) (region-end)))
@@ -497,7 +519,7 @@ Of cource, you must prepare HTS voice files for each emotion."
                  speech-synth-language)))
     (speech-synth-execute-synthesis
      lang str :warp warp :pitch pitch :rate rate :volume volume
-     :intonation intonation)))
+     :intonation intonation :postfilter postfilter)))
 
 ;;;###autoload
 (defun speech-synth ()
