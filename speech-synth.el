@@ -303,7 +303,7 @@ Of cource, you must prepare HTS voice files for each emotion."
                  speech-synth-intonation
                  speech-synth-postfilter))
         (t
-         (error "You must specify either English or japanese!"))))
+         (error "You must specify either English or Japanese!"))))
 
 (defun speech-synth-get-parameter (use_default)
   (cond ((eq use_default t)
