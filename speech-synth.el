@@ -434,10 +434,8 @@ Of cource, you must prepare HTS voice files for each emotion."
       "Japanese"))))
 
 ;;;###autoload
-(defun speech-synth-set-language (arg)
-  (interactive "P")
-  (if arg
-      (setq speech-synth-language "Japanese"))
+(defun speech-synth-set-language ()
+  (interactive)
   (let ((lang (completing-read "Language: " speech-synth-language-list nil t)))
     (setq speech-synth-language lang)
     (message "Language in speech synthesis is set to %s" lang)))
