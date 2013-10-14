@@ -204,6 +204,9 @@ Of cource, you must prepare HTS voice files for each emotion."
 (defvar speech-synth-emotion-default "normal"
   "Default of emotion in speech synthesis.")
 
+(defvar speech-synth-emotion-prefix "mei_"
+  "Prefix of voice file for emotinal speech synthesis.")
+
 (defvar speech-synth-language "English"
   "Default language in speech speech.")
 
@@ -419,7 +422,8 @@ Of cource, you must prepare HTS voice files for each emotion."
         (speech-synth-set-emotion-reset)
       (let ((emotion (completing-read "Emotion: " speech-synth-emotion-list nil t)))
         (setq speech-synth-OpenJTalk-voice-file
-              (concat speech-synth-voice-directory "mei_" emotion ".htsvoice"))
+              (concat speech-synth-voice-directory speech-synth-emotion-prefix
+                      emotion ".htsvoice"))
         (message "Emotion in speech synthesis is set to %s" emotion)))
     (message "Emotion in speech synthesis cannot be specified.")))
 
