@@ -415,16 +415,14 @@ Of cource, you must prepare HTS voice files for each emotion."
   (message "Emotion in speech synthesis are reset."))
 
 ;;;###autoload
-(defun speech-synth-set-emotion (arg)
-  (interactive "P")
+(defun speech-synth-set-emotion ()
+  (interactive)
   (if (and speech-synth-emotional-speech (equal speech-synth-language "Japanese"))
-    (if arg
-        (speech-synth-set-emotion-reset)
       (let ((emotion (completing-read "Emotion: " speech-synth-emotion-list nil t)))
         (setq speech-synth-OpenJTalk-voice-file
               (concat speech-synth-voice-directory speech-synth-emotion-prefix
                       emotion ".htsvoice"))
-        (message "Emotion in speech synthesis is set to %s" emotion)))
+        (message "Emotion in speech synthesis is set to %s" emotion))
     (message "Emotion in speech synthesis cannot be specified.")))
 
 (defun speech-synth-get-language (text)
