@@ -410,10 +410,6 @@ Of cource, you must prepare HTS voice files for each emotion."
         (t
          (error "Wrong type parameter is specified!"))))
 
-(defun speech-synth-set-emotion-reset ()
-  (setq speech-synth-emotion speech-synth-emotion-default)
-  (message "Emotion in speech synthesis are reset."))
-
 ;;;###autoload
 (defun speech-synth-set-emotion ()
   (interactive)
