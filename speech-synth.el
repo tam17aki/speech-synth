@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 by Akira Tamamori
 
 ;; Author: Akira TAMAMORI
-;; Version: 1.2.1
+;; Version: 1.2.2
 ;; Package-Requires: ((deferred "0.3.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -103,6 +103,11 @@
 ;;     default values.
 
 ;;; ChangeLog:
+;;
+;; 1.2.2
+;;  * add variables of `speech-synth-maximum-character-number-English' and
+;;    `speech-synth-maximum-character-number-Japanese' that the maximum number
+;;    of characters that can be synthesized in English and Japanese.
 ;;
 ;; 1.2.1
 ;;   * fix the maximum and minimum values of speech synthesis parameters.
