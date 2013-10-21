@@ -199,6 +199,16 @@ Of cource, you must prepare HTS voice files for each emotion."
   :type 'boolean
   :group 'speech-synth)
 
+(defcustom speech-synth-maximum-character-number-English 256
+  "Maximum number of character that can be synthesized in English."
+  :type 'integer
+  :group 'speech-synth)
+
+(defcustom speech-synth-maximum-character-number-Japanese 128
+  "Maximum number of character that can be synthesized in Japanese."
+  :type 'integer
+  :group 'speech-synth)
+
 ;;;; Internal variables
 
 (defvar speech-synth-mode-name "Synth"
@@ -280,9 +290,15 @@ Of cource, you must prepare HTS voice files for each emotion."
   (let* ((text (buffer-substring-no-properties start end))
          (lang (speech-synth-get-language text)))
     (cond ((string= lang "English")
+           (if (>= (length text) speech-synth-maximum-character-number-English)
+               (error "Length of input text, %s is too long to synthesize speech!"
+                      (length text)))
            (shell-quote-argument
             (replace-regexp-in-string "\n" " " text)))
           ((string= lang "Japanese")
+           (if (>= (length text) speech-synth-maximum-character-number-Japanese)
+               (error "Length of input text, %s is too long to synthesize speech!"
+                      (length text)))
            (shell-quote-argument
             (replace-regexp-in-string "\n" "" text))))))
 
