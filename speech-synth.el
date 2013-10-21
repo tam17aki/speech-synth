@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 by Akira Tamamori
 
 ;; Author: Akira TAMAMORI
-;; Version: 1.1.0
+;; Version: 1.2.0
 ;; Package-Requires: ((deferred "0.3.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -103,6 +103,22 @@
 ;;     default values.
 
 ;;; ChangeLog:
+;;
+;;1.2.0
+;;   * update document for installation.
+;;   * modify function `speech-synth' to possess multiple *Speech Synth* buffers.
+;;   * change implimentations of `speech-synth-from-buffer',
+;;     `speech-synth-from-region', `speech-synth-execute-synthesis' and
+;;     `speech-synth-get-string'.
+;;   * remove functions of `speech-synth-japanese-from-buffer',
+;;     `speech-synth-japanese-from-region', `speech-synth-english-from-buffer',
+;;     and `speech-synth-english-from-region', `speech-synth-popup'.
+;;   * change default values of `speech-synth-intonation-default' and
+;;     `speech-synth-postfilter-default'.
+;;   * add new variables of `speech-synth-vu-threshold-default' and
+;;     `speech-synth-vu-threshold' to specify voiced/unvoiced threshold.
+;;   * change variable name of `speech-synth-buffer' to `speech-synth-buffer-name'.
+;;   * normalize sound volume when playing wav file of synthesized speech.
 ;;
 ;; 1.1.0
 ;;   * remove redundant arguments from several functions.
