@@ -105,9 +105,9 @@
 ;;; ChangeLog:
 ;;
 ;; 1.2.2
-;;  * add variables of `speech-synth-maximum-character-number-English' and
-;;    `speech-synth-maximum-character-number-Japanese' that the maximum number
-;;    of characters that can be synthesized in English and Japanese.
+;;   * add variables of `speech-synth-maximum-character-number-English' and
+;;     `speech-synth-maximum-character-number-Japanese' that the maximum number
+;;     of characters that can be synthesized in English and Japanese.
 ;;
 ;; 1.2.1
 ;;   * fix the maximum and minimum values of speech synthesis parameters.
