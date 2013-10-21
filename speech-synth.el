@@ -104,7 +104,7 @@
 
 ;;; ChangeLog:
 ;;
-;;1.2.0
+;; 1.2.0
 ;;   * update document for installation.
 ;;   * modify function `speech-synth' to possess multiple *Speech Synth* buffers.
 ;;   * change implimentations of `speech-synth-from-buffer',
@@ -343,18 +343,20 @@ Of cource, you must prepare HTS voice files for each emotion."
       (cond ((string= param "Spectral warping")
              (let ((warp (read-number "Spectral warping: "
                                       (default-value 'speech-synth-spectral-warping))))
-               (when (or (> warp 1.0) (< warp 0.0))
-                 (error "Warping parameter must be between 0.0 and 1.0!"))
+               (when (or (< warp -0.8) (> warp 0.8))
+                 (error "Warping parameter must be between -0.8 and 0.8!"))
                (setq speech-synth-spectral-warping warp)))
             ((string= param "Speech rate")
              (let ((rate (read-number "Speech rate: "
                                       (default-value 'speech-synth-speaking-rate))))
-               (when (< rate 0.0)
-                 (error "Speaking rate parameter must be grater than 0.0!"))
+               (when (or (> rate 2.0) (< rate 0.5))
+                 (error "Speaking rate parameter must be between 0.5 and 2.0!"))
                (setq speech-synth-speaking-rate rate)))
             ((string= param "Pitch-shift")
              (let ((pitch (read-number "Pitch-shift: "
                                        (default-value 'speech-synth-pitch-shift))))
+               (when (or (> pitch 24.0) (< pitch -24.0))
+                 (error "Pitch-shift parameter must be between -24.0 and 24.0!"))
                (setq speech-synth-pitch-shift pitch)))
             ((string= param "Voice volume")
              (let ((volume (read-number "Voice volume: "
@@ -385,14 +387,16 @@ Of cource, you must prepare HTS voice files for each emotion."
   (if reset_all
       (speech-synth-set-parameter-reset))
   (cond ((string= param "Spectral warping")
-         (when (or (> param_val 1.0) (< param_val 0.0))
-           (error "Warping parameter must be between 0.0 and 1.0!"))
+         (when (or (> param_val 0.8) (< param_val -0.8))
+           (error "Warping parameter must be between -0.8 and 0.8!"))
          (setq speech-synth-spectral-warping param_val))
         ((string= param "Speech rate")
          (when (or (> param_val 1.0) (< param_val 0.0))
            (error "Speaking rate parameter must be between 0.0 and 1.0!"))
          (setq speech-synth-speaking-rate param_val))
         ((string= param "Pitch-shift")
+         (when (or (> param_val 24.0) (< param_val -24.0))
+           (error "Pitch-shift parameter must be between -24.0 and 24.0!"))
          (setq speech-synth-pitch-shift param_val))
         ((string= param "Voice volume")
          (when (< param_val 0.0)
