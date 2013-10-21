@@ -1,4 +1,4 @@
 speech-synth
 ============
 
-HMM-based Text-to-Speech API for Emacs.
+A wrapper for Flite+hts_engine and Open JTalk.
