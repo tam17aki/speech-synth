@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 by Akira Tamamori
 
 ;; Author: Akira TAMAMORI
-;; Version: 1.2.2
+;; Version: 1.2.3
 ;; Package-Requires: ((deferred "0.3.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -103,6 +103,10 @@
 ;;     default values.
 
 ;;; ChangeLog:
+;;
+;; 1.2.3
+;;   * change parent major mode of `speech-synth-mode' from `fundamental-mode'
+;;     to `default-generic-mode'.
 ;;
 ;; 1.2.2
 ;;   * add variables of `speech-synth-maximum-character-number-English' and
