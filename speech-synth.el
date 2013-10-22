@@ -452,6 +452,7 @@ Of cource, you must prepare HTS voice files for each emotion."
 
 ;;;; API
 
+;;;###autoload
 (defun* speech-synth-execute-synthesis (text &key wav-file)
   "Text-to-Speech API for Emacs."
   (lexical-let* ((lang (speech-synth-get-language text))
