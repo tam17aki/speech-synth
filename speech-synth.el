@@ -141,6 +141,7 @@
 (eval-when-compile (require 'cl))
 (require 'view)
 (require 'deferred)
+(require 'generic-x)
 
 ;;;; Customization
 
@@ -269,7 +270,7 @@ Of cource, you must prepare HTS voice files for each emotion."
 
 ;;;; Major mode
 
-(define-derived-mode speech-synth-mode fundamental-mode speech-synth-mode-name
+(define-derived-mode speech-synth-mode default-generic-mode speech-synth-mode-name
   "Major mode for speech synthesis."
   :group 'speech-synth
   (loop for (key . cmd) in speech-synth-mode-key-table
