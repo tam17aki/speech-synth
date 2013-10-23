@@ -102,44 +102,6 @@
 ;;     When invoking this command with C-u, all parameters are reset to their
 ;;     default values.
 
-;;; ChangeLog:
-;;
-;; 1.2.3
-;;   * change parent major mode of `speech-synth-mode' from `fundamental-mode'
-;;     to `default-generic-mode'.
-;;
-;; 1.2.2
-;;   * add variables of `speech-synth-maximum-character-number-English' and
-;;     `speech-synth-maximum-character-number-Japanese' that the maximum number
-;;     of characters that can be synthesized in English and Japanese.
-;;
-;; 1.2.1
-;;   * fix the maximum and minimum values of speech synthesis parameters.
-;;
-;; 1.2.0
-;;   * update document for installation.
-;;   * modify function `speech-synth' to possess multiple *Speech Synth* buffers.
-;;   * change implimentations of `speech-synth-from-buffer',
-;;     `speech-synth-from-region', `speech-synth-execute-synthesis' and
-;;     `speech-synth-get-string'.
-;;   * remove functions of `speech-synth-japanese-from-buffer',
-;;     `speech-synth-japanese-from-region', `speech-synth-english-from-buffer',
-;;     and `speech-synth-english-from-region', `speech-synth-popup'.
-;;   * change default values of `speech-synth-intonation-default' and
-;;     `speech-synth-postfilter-default'.
-;;   * add new variables of `speech-synth-vu-threshold-default' and
-;;     `speech-synth-vu-threshold' to specify voiced/unvoiced threshold.
-;;   * change variable name of `speech-synth-buffer' to `speech-synth-buffer-name'.
-;;   * normalize sound volume when playing wav file of synthesized speech.
-;;
-;; 1.1.0
-;;   * remove redundant arguments from several functions.
-;;   * add functions to synthesise emotional speech (Japanese only).
-;;   * add variables to specify voice volume, intonation, and post-filtering.
-;;
-;; 1.0.0
-;;   * Initial release.
-
 ;;; Code:
 
 (eval-when-compile (require 'cl))
