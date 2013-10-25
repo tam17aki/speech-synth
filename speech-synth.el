@@ -249,14 +249,17 @@ Of cource, you must prepare HTS voice files for each emotion."
   (view-mode 1) (View-quit))
 
 (defun speech-synth-get-language (text)
-  (cond
-   ((> (/ (* (length (replace-regexp-in-string "[^A-Za-z 0-9]+" "" text))
-             100)
-          (length text))
-       speech-synth-lang-select-percent)
-    "English")
-   (t
-    "Japanese")))
+  (cond (speech-synth-auto-select-language
+         (cond
+          ((> (/ (* (length (replace-regexp-in-string "[^A-Za-z 0-9]+" "" text))
+                    100)
+                 (length text))
+              speech-synth-lang-select-percent)
+           "English")
+          (t
+           "Japanese")))
+        (t
+         speech-synth-language)))
 
 (defun speech-synth-get-string (start end)
   (let* ((text (buffer-substring-no-properties start end))
