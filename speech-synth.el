@@ -262,7 +262,9 @@ Of cource, you must prepare HTS voice files for each emotion."
          speech-synth-language)))
 
 (defun speech-synth-get-string (start end)
-  (let* ((text (buffer-substring-no-properties start end))
+  (let* ((text (replace-regexp-in-string
+                (concat "^" comment-start
+                        ".*\n") "" (buffer-substring-no-properties start end)))
          (lang (speech-synth-get-language text)))
     (cond ((string= lang "English")
            (if (>= (length text) speech-synth-maximum-character-number-English)
