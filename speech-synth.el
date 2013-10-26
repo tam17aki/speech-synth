@@ -434,9 +434,9 @@ Of cource, you must prepare HTS voice files for each emotion."
                  (speech-synth-command
                   (speech-synth-get-command-line lang speech-synth-temp-wav-file)))
     (deferred:$
-      ;; speech synthesis
-      (deferred:process "sh" "-c"
-        (concat "echo " text " | " speech-synth-command))
+      ;; perform speech-synthesis
+      (deferred:process-shell
+        (format "echo %s | %s" text speech-synth-command))
 
       ;; play synthesized waveform
       (deferred:nextc it
