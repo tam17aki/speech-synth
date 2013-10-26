@@ -1,3 +1,7 @@
+1.2.4
+  * modify `speech-synth-get-string' to skip comment string.
+  * bug fix.
+
 1.2.3
   * change parent major mode of `speech-synth-mode' from `fundamental-mode'
     to `default-generic-mode'.
