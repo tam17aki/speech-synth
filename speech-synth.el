@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 by Akira Tamamori
 
 ;; Author: Akira TAMAMORI
-;; Version: 1.2.3
+;; Version: 1.2.4
 ;; Package-Requires: ((deferred "0.3.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
