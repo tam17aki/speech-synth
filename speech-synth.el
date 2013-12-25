@@ -38,7 +38,7 @@
 ;;   [http://open-jtalk.sourceforge.net]
 ;;
 ;; Please confirm the version numbers of the above softwares:
-;; hts_engine-API >= 1.07, Flite+hts_engine >= 1.04 and Open JTalk >= 1.06.
+;; hts_engine-API >= 1.08, Flite+hts_engine >= 1.05 and Open JTalk >= 1.07.
 ;; From the above sites, you should also download HTS voice files.
 ;; Please be sure to install the HTS voice files in the same directory.
 ;; (ex. "/usr/local/share/hts_engine")
