@@ -1,9 +1,9 @@
 ;;; speech-synth.el --- A wrapper for Flite+hts_engine and Open JTalk.
 
-;; Copyright (C) 2013 by Akira Tamamori
+;; Copyright (C) 2013, 2014 Akira Tamamori
 
 ;; Author: Akira TAMAMORI
-;; Version: 1.2.4
+;; Version: 1.2.5
 ;; Package-Requires: ((deferred "0.3.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
