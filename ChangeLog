@@ -1,3 +1,6 @@
+1.2.5
+  * fix a bug when `comment-start' is nil.
+
 1.2.4
   * modify `speech-synth-get-string' to skip comment string.
   * bug fix.
