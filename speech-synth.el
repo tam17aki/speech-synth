@@ -38,7 +38,7 @@
 ;;   [http://open-jtalk.sourceforge.net]
 ;;
 ;; Please confirm the version numbers of the above softwares:
-;; hts_engine-API >= 1.08, Flite+hts_engine >= 1.05 and Open JTalk >= 1.07.
+;; hts_engine-API >= 1.07, Flite+hts_engine >= 1.04 and Open JTalk >= 1.06.
 ;; From the above sites, you should also download HTS voice files.
 ;; Please be sure to install the HTS voice files in the same directory.
 ;; (ex. "/usr/local/share/hts_engine")
@@ -262,9 +262,12 @@ Of cource, you must prepare HTS voice files for each emotion."
          speech-synth-language)))
 
 (defun speech-synth-get-string (start end)
-  (let* ((text (replace-regexp-in-string
-                (concat "^" comment-start
-                        ".*\n") "" (buffer-substring-no-properties start end)))
+  (let* ((comment-start-char comment-start)
+         (text (if comment-start-char
+                   (replace-regexp-in-string
+                    (concat "^" comment-start-char ".*\n") ""
+                    (buffer-substring-no-properties start end))
+                 (buffer-substring-no-properties start end)))
          (lang (speech-synth-get-language text)))
     (cond ((string= lang "English")
            (if (>= (length text) speech-synth-maximum-character-number-English)
